@@ -7,11 +7,15 @@ in a pentatonic scale.
 Author: Mahesh Venkitachalam
 """
 
-import sys, os
-import time, random 
-import wave, argparse, pygame 
-import numpy as np
+import argparse
+import os
+import random
+import time
+import wave
 from collections import deque
+
+import numpy as np
+import pygame
 from matplotlib import pyplot as plt
 
 # show plot of algorithm in action?
@@ -19,7 +23,8 @@ gShowPlot = False
 
 # notes of a Pentatonic Minor scale
 # piano C4-E(b)-F-G-B(b)-C5
-pmNotes = {'C4': 262, 'Eb': 311, 'F': 349, 'G':391, 'Bb':466}
+pmNotes = {'C4': 262, 'Eb': 311, 'F': 349, 'G': 391, 'Bb': 466}
+
 
 # write out WAVE file
 def writeWAVE(fname, data):
@@ -36,33 +41,36 @@ def writeWAVE(fname, data):
     file.writeframes(data)
     file.close()
 
+
 # generate note of given frequency
 def generateNote(freq):
+    # mean wave duration = 1s
     nSamples = 44100
     sampleRate = 44100
-    N = int(sampleRate/freq)
+    N = int(sampleRate / freq)
     # initialize ring buffer
     buf = deque([random.random() - 0.5 for i in range(N)])
     # plot of flag set 
     if gShowPlot:
         axline, = plt.plot(buf)
     # init sample buffer
-    samples = np.array([0]*nSamples, 'float32')
+    samples = np.array([0] * nSamples, 'float32')
     for i in range(nSamples):
         samples[i] = buf[0]
-        avg = 0.995*0.5*(buf[0] + buf[1])
+        avg = 0.995 * 0.5 * (buf[0] + buf[1])
         buf.append(avg)
-        buf.popleft()  
+        buf.popleft()
         # plot of flag set 
         if gShowPlot:
             if i % 1000 == 0:
                 axline.set_ydata(buf)
                 plt.draw()
-      
+
     # samples to 16-bit to string
     # max value is 32767 for 16-bit
     samples = np.array(samples * 32767, 'int16')
-    return samples.tostring()
+    return samples.tobytes()
+
 
 # play a wav file
 class NotePlayer:
@@ -72,20 +80,24 @@ class NotePlayer:
         pygame.init()
         # dictionary of notes
         self.notes = {}
+
     # add a note
     def add(self, fileName):
         self.notes[fileName] = pygame.mixer.Sound(fileName)
+
     # play a note
     def play(self, fileName):
         try:
             self.notes[fileName].play()
         except:
             print(fileName + ' not found!')
+
     def playRandom(self):
         """play a random note"""
-        index = random.randint(0, len(self.notes)-1)
+        index = random.randint(0, len(self.notes) - 1)
         note = list(self.notes.values())[index]
         note.play()
+
 
 # main() function
 def main():
@@ -109,31 +121,31 @@ def main():
 
     print('creating notes...')
     for name, freq in list(pmNotes.items()):
-        fileName = name + '.wav' 
+        fileName = name + '.wav'
         if not os.path.exists(fileName) or args.display:
-            data = generateNote(freq) 
+            data = generateNote(freq)
             print('creating ' + fileName + '...')
-            writeWAVE(fileName, data) 
+            writeWAVE(fileName, data)
         else:
             print('fileName already created. skipping...')
-        
+
         # add note to player
         nplayer.add(name + '.wav')
-        
+
         # play note if display flag set
         if args.display:
             nplayer.play(name + '.wav')
             time.sleep(0.5)
-    
+
     # play a random tune
     if args.play:
         while True:
-            try: 
+            try:
                 nplayer.playRandom()
                 # rest - 1 to 8 beats
-                rest = np.random.choice([1, 2, 4, 8], 1, 
+                rest = np.random.choice([1, 2, 4, 8], 1,
                                         p=[0.15, 0.7, 0.1, 0.05])
-                time.sleep(0.25*rest[0])
+                time.sleep(0.25 * rest[0])
             except KeyboardInterrupt:
                 exit()
 
@@ -141,11 +153,12 @@ def main():
     if args.piano:
         while True:
             for event in pygame.event.get():
-                if (event.type == pygame.KEYUP):
+                if event.type == pygame.KEYUP:
                     print("key pressed")
                     nplayer.playRandom()
                     time.sleep(0.5)
-  
+
+
 # call main
 if __name__ == '__main__':
     main()

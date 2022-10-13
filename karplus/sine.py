@@ -13,8 +13,9 @@ sRate = 44100
 nSamples = sRate * 5
 x = np.arange(nSamples)/float(sRate)
 vals = np.sin(2.0*math.pi*146.83*x)
-data = np.array(vals * 32767, 'int16').tostring()
+data = np.array(vals * 32767, 'int16').tobytes()
 file = wave.open('sine146_83.wav', 'wb')
+# 单声道，2字节，无压缩
 file.setparams((1, 2, sRate, nSamples, 'NONE', 'uncompressed'))
 file.writeframes(data)
 file.close()

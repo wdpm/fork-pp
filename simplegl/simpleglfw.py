@@ -7,13 +7,15 @@ OpenGL 3.2 context.
 Author: Mahesh Venkitachalam
 """
 
-import OpenGL
-from OpenGL.GL import *
+import math
+import os
+import sys
 
-import numpy, math, sys, os
-import glutils
-
+# sys.path.extend(['../common'])
 import glfw
+import glutils
+import numpy
+from OpenGL.GL import *
 
 strVS = """
 #version 330 core
@@ -81,8 +83,10 @@ void main() {
 }
 """
 
-class Scene:    
+
+class Scene:
     """ OpenGL 3D scene class"""
+
     # initialization
     def __init__(self):
         # create shader
@@ -90,19 +94,17 @@ class Scene:
 
         glUseProgram(self.program)
 
-        self.pMatrixUniform = glGetUniformLocation(self.program, 
-                                                   b'uPMatrix')
-        self.mvMatrixUniform = glGetUniformLocation(self.program, 
-                                                  b'uMVMatrix')
+        self.pMatrixUniform = glGetUniformLocation(self.program, b'uPMatrix')
+        self.mvMatrixUniform = glGetUniformLocation(self.program, b'uMVMatrix')
         # texture 
         self.tex2D = glGetUniformLocation(self.program, b'tex2D')
 
         # define triange strip vertices 
         vertexData = numpy.array(
-            [-0.5, -0.5, 0.0, 
-              0.5, -0.5, 0.0, 
-              -0.5, 0.5, 0.0,
-              0.5, 0.5, 0.0], numpy.float32)
+            [-0.5, -0.5, 0.0,
+             0.5, -0.5, 0.0,
+             -0.5, 0.5, 0.0,
+             0.5, 0.5, 0.0], numpy.float32)
 
         # set up vertex array object (VAO)
         self.vao = glGenVertexArrays(1)
@@ -111,7 +113,7 @@ class Scene:
         self.vertexBuffer = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, self.vertexBuffer)
         # set buffer data 
-        glBufferData(GL_ARRAY_BUFFER, 4*len(vertexData), vertexData, 
+        glBufferData(GL_ARRAY_BUFFER, 4 * len(vertexData), vertexData,
                      GL_STATIC_DRAW)
         # enable vertex array
         glEnableVertexAttribArray(0)
@@ -121,27 +123,27 @@ class Scene:
         glBindVertexArray(0)
 
         # time
-        self.t = 0 
+        self.t = 0
 
         # texture
         self.texId = glutils.loadTexture('star.png')
 
         # show circle?
         self.showCircle = False
-        
+
     # step
     def step(self):
         # increment angle
         self.t = (self.t + 1) % 360
         # set shader angle in radians
-        glUniform1f(glGetUniformLocation(self.program, 'uTheta'), 
+        glUniform1f(glGetUniformLocation(self.program, 'uTheta'),
                     math.radians(self.t))
 
     # render 
-    def render(self, pMatrix, mvMatrix):        
+    def render(self, pMatrix, mvMatrix):
         # use shader
         glUseProgram(self.program)
-        
+
         # set proj matrix
         glUniformMatrix4fv(self.pMatrixUniform, 1, GL_FALSE, pMatrix)
 
@@ -149,7 +151,7 @@ class Scene:
         glUniformMatrix4fv(self.mvMatrixUniform, 1, GL_FALSE, mvMatrix)
 
         # show circle?
-        glUniform1i(glGetUniformLocation(self.program, b'showCircle'), 
+        glUniform1i(glGetUniformLocation(self.program, b'showCircle'),
                     self.showCircle)
 
         # enable texture 
@@ -167,6 +169,7 @@ class Scene:
 
 class RenderWindow:
     """GLFW Rendering window class"""
+
     def __init__(self):
 
         # save current working directory
@@ -174,7 +177,8 @@ class RenderWindow:
 
         # initialize glfw - this changes cwd
         glfw.glfwInit()
-        
+        # glfw.init()
+
         # restore cwd
         os.chdir(cwd)
 
@@ -182,26 +186,26 @@ class RenderWindow:
         glfw.glfwWindowHint(glfw.GLFW_CONTEXT_VERSION_MAJOR, 3)
         glfw.glfwWindowHint(glfw.GLFW_CONTEXT_VERSION_MINOR, 3)
         glfw.glfwWindowHint(glfw.GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE)
-        glfw.glfwWindowHint(glfw.GLFW_OPENGL_PROFILE, 
+        glfw.glfwWindowHint(glfw.GLFW_OPENGL_PROFILE,
                             glfw.GLFW_OPENGL_CORE_PROFILE)
-    
+
         # make a window
         self.width, self.height = 640, 480
-        self.aspect = self.width/float(self.height)
-        self.win = glfw.glfwCreateWindow(self.width, self.height, 
+        self.aspect = self.width / float(self.height)
+        self.win = glfw.glfwCreateWindow(self.width, self.height,
                                          b'simpleglfw')
         # make context current
         glfw.glfwMakeContextCurrent(self.win)
-        
+
         # initialize GL
         glViewport(0, 0, self.width, self.height)
         glEnable(GL_DEPTH_TEST)
-        glClearColor(0.5, 0.5, 0.5,1.0)
+        glClearColor(0.5, 0.5, 0.5, 1.0)
 
         # set window callbacks
         glfw.glfwSetMouseButtonCallback(self.win, self.onMouseButton)
         glfw.glfwSetKeyCallback(self.win, self.onKeyboard)
-        glfw.glfwSetWindowSizeCallback(self.win, self.onSize)        
+        glfw.glfwSetWindowSizeCallback(self.win, self.onSize)
 
         # create 3D
         self.scene = Scene()
@@ -209,26 +213,25 @@ class RenderWindow:
         # exit flag
         self.exitNow = False
 
-        
     def onMouseButton(self, win, button, action, mods):
-        #print 'mouse button: ', win, button, action, mods
+        # print 'mouse button: ', win, button, action, mods
         pass
 
     def onKeyboard(self, win, key, scancode, action, mods):
-        #print 'keyboard: ', win, key, scancode, action, mods
+        # print 'keyboard: ', win, key, scancode, action, mods
         if action == glfw.GLFW_PRESS:
             # ESC to quit
-            if key == glfw.GLFW_KEY_ESCAPE: 
+            if key == glfw.GLFW_KEY_ESCAPE:
                 self.exitNow = True
             else:
                 # toggle cut
-                self.scene.showCircle = not self.scene.showCircle 
-        
+                self.scene.showCircle = not self.scene.showCircle
+
     def onSize(self, win, width, height):
-        #print 'onsize: ', win, width, height
+        # print 'onsize: ', win, width, height
         self.width = width
         self.height = height
-        self.aspect = width/float(height)
+        self.aspect = width / float(height)
         glViewport(0, 0, self.width, self.height)
 
     def run(self):
@@ -243,10 +246,10 @@ class RenderWindow:
                 t = currT
                 # clear
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-                
+
                 # build projection matrix
                 pMatrix = glutils.perspective(45.0, self.aspect, 0.1, 100.0)
-                
+
                 mvMatrix = glutils.lookAt([0.0, 0.0, -2.0], [0.0, 0.0, 0.0],
                                           [0.0, 1.0, 0.0])
                 # render
@@ -263,12 +266,12 @@ class RenderWindow:
     def step(self):
         # clear
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
+
         # build projection matrix
         pMatrix = glutils.perspective(45.0, self.aspect, 0.1, 100.0)
-                
+
         mvMatrix = glutils.lookAt([0.0, 0.0, -2.0], [0.0, 0.0, 0.0],
-                                          [0.0, 1.0, 0.0])
+                                  [0.0, 1.0, 0.0])
         # render
         self.scene.render(pMatrix, mvMatrix)
         # step 
@@ -278,12 +281,14 @@ class RenderWindow:
         # Poll for and process events
         glfw.PollEvents()
 
+
 # main() function
 def main():
     print("Starting simpleglfw. "
           "Press any key to toggle cut. Press ESC to quit.")
     rw = RenderWindow()
     rw.run()
+
 
 # call main
 if __name__ == '__main__':

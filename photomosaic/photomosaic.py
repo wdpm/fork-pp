@@ -26,6 +26,7 @@ def getAverageRGBOld(image):
   avg = tuple([int(sum(x)/npixels) for x in zip(*sumRGB)])
   return avg
 
+# refer https://stackoverflow.com/a/58177484
 def getAverageRGB(image):
   """
   Given PIL Image, return average value of color as (r, g, b)
@@ -35,6 +36,7 @@ def getAverageRGB(image):
   # get shape
   w,h,d = im.shape
   # get average
+  # 这里对行这个维度求平均数，因此只会收集行，而不会处理列，因此结果保持(R,G,B)还是d=3个深度
   return tuple(np.average(im.reshape(w*h, d), axis=0))
 
 def splitImage(image, size):
@@ -42,12 +44,16 @@ def splitImage(image, size):
   Given Image and dims (rows, cols) returns an m*n list of Images 
   """
   W, H = image.size[0], image.size[1]
+  # n: row count ; m: col count
   m, n = size
+  # ??? W/m  H/h
   w, h = int(W/n), int(H/m)
   # image list
   imgs = []
   # generate list of dimensions
+  # m -> col count
   for j in range(m):
+    # n -> row count
     for i in range(n):
       # append cropped image
       imgs.append(image.crop((i*w, j*h, (i+1)*w, (j+1)*h)))
@@ -169,15 +175,21 @@ def createPhotomosaic(target_image, input_images, grid_size,
     # target sub-image average
     avg = getAverageRGB(img)
     # find match index
+    # do better: 请尝试用 SciPy 的 K-D 树替代线性搜索
+    # （参见 http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.html
     match_index = getBestMatchIndex(avg, avgs)
     output_images.append(input_images[match_index])
     # user feedback
+    # log at every 1/10 work
     if count > 0 and batch_size > 10 and count % batch_size is 0:
       print('processed %d of %d...' %(count, len(target_images)))
     count += 1
     # remove selected image from input if flag set
     if not reuse_images:
-      input_images.remove(match)
+      # https://github.com/electronut/pp/issues/16
+      input_images.remove(input_images[match_index])
+      avgs.remove(avgs[match_index])
+      # input_images.remove(match)
 
   print('creating mosaic...')
   # draw mosaic to image
@@ -218,7 +230,7 @@ def main():
   # shuffle list - to get a more varied output?
   random.shuffle(input_images)
 
-  # size of grid
+  # size of grid: col, row
   grid_size = (int(args.grid_size[0]), int(args.grid_size[1]))
 
   # output
@@ -263,7 +275,10 @@ def main():
   print("saved output to %s" % (output_filename,))
   print('done.')
 
-# Standard boilerplate to call the main() function to begin
-# the program.
+# Standard boilerplate to call the main() function to begin the program.
+# do better: 更艺术的表现形式，是在每个小块图像之间留出几个像素的均匀间隙
+# example:
+# python photomosaic.py --target-image test-data/a.jpg --input-folder test-data/set1 --grid-size 256 256
+# python photomosaic.py --target-image test-data/b.jpg --input-folder test-data/set1 --grid-size 90 120
 if __name__ == '__main__':
   main()

@@ -32,9 +32,12 @@ def createRandomTile(dims):
   # draw random circles
   for i in range(n):
     # -r is used so circle stays inside - cleaner for tiling
+    # [r,w-r] [r,h-r]?
     x, y = random.randint(0, dims[0]-r), random.randint(0, dims[1]-r)
     fill = (random.randint(0, 255), random.randint(0, 255), 
             random.randint(0, 255))
+    # 由左上角和右下角指定，
+    # 分别为(x-r, y-r)和(x+r, y+r)，其中(x, y)是该圆的圆心，r 是半径
     draw.ellipse((x-r, y-r, x+r, y+r), fill)
   # return image
   return img

@@ -19,7 +19,7 @@ def drawCircleTurtle(x, y, r):
 
 
     # draw circle
-    for i in range(0, 365, 5):
+    for i in range(0, 36, 5):
         a = math.radians(i)
         turtle.setpos(x + r*math.cos(a), y + r*math.sin(a))
 
@@ -40,7 +40,7 @@ def drawSpiralTurtle(x, y, r):
 def main():
     print('testing...')
     
-    #drawCircleTurtle(100, 100, 50)
+    # drawCircleTurtle(100, 100, 50)
 
     drawSpiralTurtle(0, 0, 5)
 

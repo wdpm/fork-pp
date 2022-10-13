@@ -47,6 +47,7 @@ class Spiro:
         self.col = col
         # reduce r/R to smallest form by dividing with GCD
         gcdVal = gcd(self.r, self.R)
+        # nRot is the minium times for painting the whole shape
         self.nRot = self.r//gcdVal
         # get ratio of radii
         self.k = r/float(R)
@@ -188,6 +189,8 @@ def saveDrawing():
     canvas.postscript(file = fileName + '.eps')
     # use PIL to convert to PNG
     img = Image.open(fileName + '.eps')
+    # from PIL import EpsImagePlugin
+    # EpsImagePlugin.gs_windows_binary =  r'X:\...\gs\gs9.52\bin\gswin64c'
     img.save(fileName + '.png', 'png')
     # show turtle
     turtle.showturtle()
